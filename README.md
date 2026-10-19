@@ -33,3 +33,4 @@ El proyecto cumple con los siguientes criterios técnicos:
 - R2.txt: Comandos de configuración del router de la Sucursal.
 - ISP.txt: Comandos de simulación del proveedor de Internet.
 - Hosts.txt: Comandos de configuracion de cada Dispositivo hosts.
+- Producto 1 Equipo 2: Archivo de topologia de pnetlab Configurado
