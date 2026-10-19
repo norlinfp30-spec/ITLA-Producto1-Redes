@@ -1,0 +1,25 @@
+! ==============================================================================
+! CONFIGURACION PARA EL ROUTER ISP (Para simular salida a Internet en PNETLab)
+! ==============================================================================
+enable
+configure terminal
+hostname ISP
+no ip domain-lookup
+
+! Interfaz conectada hacia R1-Core (e0/0 del ISP hacia e0/2 de R1-Core)
+interface ethernet 0/0
+ description Hacia R1-Core (e0/2)
+ ip address 200.100.10.1 255.255.255.252
+ no shutdown
+
+! Interfaz Loopback para simular la IP de Internet (8.8.8.8)
+interface loopback 0
+ description Simulacion de Internet / DNS Google
+ ip address 8.8.8.8 255.255.255.255
+ no shutdown
+
+! Ruta estatica de retorno hacia toda la red del Equipo 2 apuntando a R1-Core
+ip route 172.18.0.0 255.254.0.0 200.100.10.2
+
+end
+write memory

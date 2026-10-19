@@ -1,0 +1,109 @@
+! ==============================================================================
+! 8. R1-CORE (Backbone e Internet) - ID OSPF 2263
+! ==============================================================================
+enable
+configure terminal
+hostname R1-Core
+no ip domain-lookup
+ip domain-name itla.edu.do
+enable secret class
+username admin privilege 15 secret class
+service password-encryption
+banner motd # Acceso restringido - ITLA TI-203 Equipo 2 #
+! ACL estandar 10: solo la red de Gestion puede entrar por VTY
+access-list 10 permit 172.18.10.64 0.0.0.63
+line console 0
+ password class
+ login
+ logging synchronous
+ exec-timeout 0 0
+line vty 0 4
+ access-class 10 in
+ login local
+ transport input ssh
+ exec-timeout 0 0
+exit
+crypto key generate rsa modulus 1024
+ip ssh version 2
+ipv6 unicast-routing
+
+! Enlace a SWM1 (e0/0)
+interface ethernet 0/0
+ description Hacia SWM1
+ ip address 172.18.10.193 255.255.255.252
+ ipv6 address 2001:25:18:9::1/64
+ ip nat inside
+ ip ospf network point-to-point
+ ipv6 ospf network point-to-point
+ no shutdown
+interface ethernet 0/2
+ description Hacia ISP
+ ip address 200.100.10.2 255.255.255.252
+ ip nat outside
+ no shutdown
+ip route 0.0.0.0 0.0.0.0 200.100.10.1
+! Enlace a SWM2 (e0/1)
+interface ethernet 0/1
+ description Hacia SWM2
+ ip address 172.18.10.197 255.255.255.252
+ ipv6 address 2001:25:18:a::1/64
+ ip nat inside
+ ip ospf network point-to-point
+ ipv6 ospf network point-to-point
+ no shutdown
+! Enlace a R2 (s1/0)
+interface serial 1/0
+ description P2P hacia R2
+ ip address 172.18.10.201 255.255.255.252
+ ipv6 address 2001:25:18:b::1/64
+ ip nat inside
+ ip ospf network point-to-point
+ ipv6 ospf network point-to-point
+ no shutdown
+
+! NAT hacia Internet (ACL estandar 1)
+access-list 1 permit 172.18.0.0 0.1.255.255
+ip nat inside source list 1 interface ethernet 0/2 overload
+
+! OSPFv2 (area 0) + ruta por defecto
+router ospf 2263
+ router-id 1.1.1.1
+ network 172.18.10.192 0.0.0.3 area 0
+ network 172.18.10.196 0.0.0.3 area 0
+ network 172.18.10.200 0.0.0.3 area 0
+ default-information originate always
+
+! OSPFv3 (IPv6)
+ipv6 router ospf 2263
+ router-id 1.1.1.1
+interface ethernet 0/0
+ ipv6 ospf 2263 area 0
+interface ethernet 0/1
+ ipv6 ospf 2263 area 0
+interface serial 1/0
+ ipv6 ospf 2263 area 0
+end
+write memory
+
+! ----- ACL DE INTERNET (APLICAR AL FINAL, tras probar conectividad) -----
+configure terminal
+ip access-list extended ACL-INTERNET
+ permit ospf any any
+ permit ip any 172.18.0.0 0.1.255.255
+ permit tcp 172.18.0.0 0.0.7.255 any eq 80
+ permit tcp 172.18.0.0 0.0.7.255 any eq 443
+ permit udp 172.18.0.0 0.0.7.255 any eq 53
+ permit icmp 172.18.0.0 0.0.7.255 any
+ deny ip 172.18.0.0 0.0.7.255 any
+ deny ip 172.18.10.128 0.0.0.31 any
+ deny ip 172.18.10.160 0.0.0.15 any
+ deny ip 172.18.10.176 0.0.0.15 any
+ permit ip any any
+interface ethernet 0/0
+ ip access-group ACL-INTERNET in
+interface ethernet 0/1
+ ip access-group ACL-INTERNET in
+interface serial 1/0
+ ip access-group ACL-INTERNET in
+end
+write memory

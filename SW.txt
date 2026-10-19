@@ -1,0 +1,43 @@
+! ==============================================================================
+! 6. SW (Datacenter - VLAN 70)
+! ==============================================================================
+enable
+configure terminal
+hostname SW
+no ip domain-lookup
+ip domain-name itla.edu.do
+enable secret class
+username admin privilege 15 secret class
+service password-encryption
+banner motd # Acceso restringido - ITLA TI-203 Equipo 2 #
+! ACL estandar 10: solo la red de Gestion puede entrar por VTY
+access-list 10 permit 172.18.10.64 0.0.0.63
+line console 0
+ password class
+ login
+ logging synchronous
+ exec-timeout 0 0
+line vty 0 4
+ access-class 10 in
+ login local
+ transport input ssh
+ exec-timeout 0 0
+exit
+crypto key generate rsa modulus 1024
+ip ssh version 2
+vtp domain ITLA-R2
+vtp mode transparent
+vlan 70
+ name Datacenter
+interface range ethernet 0/0 - 1
+ description e0/0 hacia R2 | e0/1 hacia SERVICIOS
+ switchport mode access
+ switchport access vlan 70
+ no shutdown
+interface vlan 70
+ ip address 172.18.10.2 255.255.255.192
+ no shutdown
+ip default-gateway 172.18.10.1
+end
+write memory
+

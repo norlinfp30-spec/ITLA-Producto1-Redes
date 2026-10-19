@@ -1,0 +1,118 @@
+! ==============================================================================
+! 9. R2 (Sucursal) - ID OSPF 2258
+! ==============================================================================
+enable
+configure terminal
+hostname R2
+no ip domain-lookup
+ip domain-name itla.edu.do
+enable secret class
+username admin privilege 15 secret class
+service password-encryption
+banner motd # Acceso restringido - ITLA TI-203 Equipo 2 #
+! ACL estandar 10: solo la red de Gestion puede entrar por VTY
+access-list 10 permit 172.18.10.64 0.0.0.63
+line console 0
+ password class
+ login
+ logging synchronous
+ exec-timeout 0 0
+line vty 0 4
+ access-class 10 in
+ login local
+ transport input ssh
+ exec-timeout 0 0
+exit
+crypto key generate rsa modulus 1024
+ip ssh version 2
+ipv6 unicast-routing
+
+! Enlace serial a R1-Core
+interface serial 1/0
+ description P2P hacia R1-Core
+ ip address 172.18.10.202 255.255.255.252
+ ipv6 address 2001:25:18:b::2/64
+ ip ospf network point-to-point
+ ipv6 ospf network point-to-point
+ no shutdown
+
+! e0/0 = trunk hacia SWA13 (router-on-a-stick)
+interface ethernet 0/0
+ description Trunk hacia SWA13
+ no ip address
+ no shutdown
+interface ethernet 0/0.50
+ description Academicos
+ encapsulation dot1Q 50
+ ip address 172.18.9.1 255.255.255.128
+ ipv6 address 2001:25:18:2::1/64
+interface ethernet 0/0.60
+ description Finanzas
+ encapsulation dot1Q 60
+ ip address 172.18.9.129 255.255.255.128
+ ipv6 address 2001:25:18:3::1/64
+interface ethernet 0/0.99
+ description Blackhull
+ encapsulation dot1Q 99
+ ip address 172.18.10.177 255.255.255.240
+ ipv6 address 2001:25:18:8::1/64
+
+! e0/1 = Datacenter (hacia SW / SERVICIOS)
+interface ethernet 0/1
+ description Datacenter
+ ip address 172.18.10.1 255.255.255.192
+ ipv6 address 2001:25:18:4::1/64
+ no shutdown
+
+! OSPFv2 (area 0 = serial, area 2 stub = LANs de R2)
+router ospf 2258
+ router-id 2.2.2.2
+ area 2 stub
+ passive-interface default
+ no passive-interface serial 1/0
+ network 172.18.10.200 0.0.0.3 area 0
+ network 172.18.9.0 0.0.0.127 area 2
+ network 172.18.9.128 0.0.0.127 area 2
+ network 172.18.10.0 0.0.0.63 area 2
+ network 172.18.10.176 0.0.0.15 area 2
+
+! OSPFv3
+ipv6 router ospf 2258
+ router-id 2.2.2.2
+ area 2 stub
+ passive-interface default
+ no passive-interface serial 1/0
+interface serial 1/0
+ ipv6 ospf 2258 area 0
+interface ethernet 0/0.50
+ ipv6 ospf 2258 area 2
+interface ethernet 0/0.60
+ ipv6 ospf 2258 area 2
+interface ethernet 0/0.99
+ ipv6 ospf 2258 area 2
+interface ethernet 0/1
+ ipv6 ospf 2258 area 2
+end
+write memory
+
+! ----- ACLs R2 (APLICAR AL FINAL, tras probar conectividad) -----
+configure terminal
+! Estandar 20: bloquear Estudiantes hacia Finanzas (cerca del destino)
+access-list 20 deny 172.18.0.0 0.0.7.255
+access-list 20 permit any
+! Extendidas
+ip access-list extended ACL-ACADEMICOS
+ deny ip 172.18.9.0 0.0.0.127 172.18.9.128 0.0.0.127
+ deny ip 172.18.9.0 0.0.0.127 172.18.10.64 0.0.0.63
+ permit ip any any
+ip access-list extended ACL-FINANZAS
+ deny ip 172.18.9.128 0.0.0.127 172.18.0.0 0.0.7.255
+ deny ip 172.18.9.128 0.0.0.127 172.18.8.0 0.0.0.255
+ permit ip any any
+interface ethernet 0/0.50
+ ip access-group ACL-ACADEMICOS in
+interface ethernet 0/0.60
+ ip access-group ACL-FINANZAS in
+ ip access-group 20 out
+end
+write memory
