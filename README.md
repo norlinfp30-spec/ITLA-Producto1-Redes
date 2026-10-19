@@ -32,3 +32,4 @@ El proyecto cumple con los siguientes criterios técnicos:
 - R1-Core.txt: Comandos de configuración del router Core/Backbone.
 - R2.txt: Comandos de configuración del router de la Sucursal.
 - ISP.txt: Comandos de simulación del proveedor de Internet.
+- Hosts.txt: Comandos de configuracion de cada Dispositivo hosts.
