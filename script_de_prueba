@@ -1,0 +1,860 @@
+==============================================================================
+  SCRIPT DE PRUEBA
+==============================================================================
+  Proyecto: OSPFv2 multiárea + HSRP + ACLs IPv4 (PNETLab)
+  Equipos: R1-Core, R2, SWM1 y SWM2 (+ pruebas de ping desde hosts)
+
+  CONTENIDO
+    1. Comandos utilizados
+    2. OSPF   -> R1-Core / R2 / SWM1 / SWM2
+    3. HSRP   -> SWM1 / SWM2
+    4. ACLs   -> R1-Core / R2 / SWM1 / SWM2
+    5. Pings  -> verificación de las ACLs
+==============================================================================
+
+------------------------------------------------------------------------------
+  1. COMANDOS UTILIZADOS
+------------------------------------------------------------------------------
+R1-Core, R2, SWM1 y SWM2
+
+comandos utilizados
+
+terminal length 0
+show ip ospf neighbor
+show ip ospf interface brief
+show ip route ospf
+show ip protocols
+show ip ospf database
+
+==============================================================================
+  2. OSPF
+==============================================================================
+
+------------------------------------------------------------------------------
+  2.1 R1-CORE
+------------------------------------------------------------------------------
+R1-CORE
+
+show ip ospf neighbor
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+2.2.2.2           0   FULL/  -        00:00:37    172.18.10.202   Serial1/0
+4.4.4.4           0   FULL/  -        00:00:34    172.18.10.198   Ethernet0/1
+3.3.3.3           0   FULL/  -        00:00:36    172.18.10.194   Ethernet0/0
+
+show ip ospf interface brief
+R1-Core#show ip ospf interface brief 
+Interface    PID   Area            IP Address/Mask    Cost  State Nbrs F/C
+Se1/0        2263  0               172.18.10.201/30   64    P2P   1/1
+Et0/1        2263  0               172.18.10.197/30   10    P2P   1/1
+NV0          2263  0               Unnumbered Et0/0   1785  P2P   0/0
+Et0/0        2263  0               172.18.10.193/30   10    P2P   1/1
+
+show ip route ospf
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area 
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+
+
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override
+
+Gateway of last resort is 200.100.10.1 to network 0.0.0.0
+
+      172.18.0.0/16 is variably subnetted, 10 subnets, 5 masks
+O IA     172.18.9.0/25 [110/74] via 172.18.10.202, 00:18:41, Serial1/0
+O IA     172.18.9.128/25 [110/74] via 172.18.10.202, 00:18:41, Serial1/0
+O IA     172.18.10.0/26 [110/74] via 172.18.10.202, 00:18:41, Serial1/0
+O IA     172.18.10.176/28 [110/74] via 172.18.10.202, 00:18:41, Serial1/0
+
+R1-Core#show ip protocols 
+*** IP Routing is NSF aware ***
+
+Routing Protocol is "application"
+  Sending updates every 0 seconds
+  Invalid after 0 seconds, hold down 0, flushed after 0
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Maximum path: 32
+  Routing for Networks:
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+  Distance: (default is 4)
+
+Routing Protocol is "ospf 2263"
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Router ID 1.1.1.1
+  It is an autonomous system boundary router
+ Redistributing External Routes from,
+  Number of areas in this router is 1. 1 normal 0 stub 0 nssa
+  Maximum path: 4
+  Routing for Networks:
+    172.18.10.192 0.0.0.3 area 0
+    172.18.10.196 0.0.0.3 area 0
+    172.18.10.200 0.0.0.3 area 0
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+    2.2.2.2              110      00:21:04
+  Distance: (default is 110)
+
+R1-Core#
+*Oct 25 22:07:39.347: %CDP-4-DUPLEX_MISMATCH: duplex mismatch discovered on Ethernet0/1 (not full duplex), with SWM2.itla.edu
+.do Ethernet0/0 (full duplex).
+R1-Core#
+*Oct 25 22:07:52.781: %CDP-4-DUPLEX_MISMATCH: duplex mismatch discovered on Ethernet0/0 (not full duplex), with SWM1.itla.edu
+.do Ethernet0/0 (full duplex).
+R1-Core#
+*Oct 25 22:08:37.186: %CDP-4-DUPLEX_MISMATCH: duplex mismatch discovered on Ethernet0/1 (not full duplex), with SWM2.itla.edu
+.do Ethernet0/0 (full duplex).
+R1-Core#
+R1-Core#
+R1-Core#show ip protocols 
+*** IP Routing is NSF aware ***
+
+Routing Protocol is "application"
+  Sending updates every 0 seconds
+  Invalid after 0 seconds, hold down 0, flushed after 0
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Maximum path: 32
+  Routing for Networks:
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+  Distance: (default is 4)
+
+Routing Protocol is "ospf 2263"
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Router ID 1.1.1.1
+  It is an autonomous system boundary router
+ Redistributing External Routes from,
+  Number of areas in this router is 1. 1 normal 0 stub 0 nssa
+  Maximum path: 4
+  Routing for Networks:
+    172.18.10.192 0.0.0.3 area 0
+    172.18.10.196 0.0.0.3 area 0
+    172.18.10.200 0.0.0.3 area 0
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+    2.2.2.2              110      00:22:40
+  Distance: (default is 110)
+
+R1-Core#show ip ospf database 
+
+            OSPF Router with ID (1.1.1.1) (Process ID 2263)
+
+Router Link States (Area 0)
+
+Link ID         ADV Router      Age         Seq#       Checksum Link count
+1.1.1.1         1.1.1.1         1419        0x80000003 0x0002C2 6
+2.2.2.2         2.2.2.2         1429        0x80000002 0x00AEBD 2
+3.3.3.3         3.3.3.3         1420        0x80000003 0x0012CE 2
+4.4.4.4         4.4.4.4         1426        0x80000003 0x00567A 2
+
+Summary Net Link States (Area 0)
+
+Link ID         ADV Router      Age         Seq#       Checksum
+172.18.9.0      2.2.2.2         1536        0x80000001 0x00B32F
+172.18.9.128    2.2.2.2         1536        0x80000001 0x00AEB3
+172.18.10.0     2.2.2.2         1536        0x80000001 0x002A77
+172.18.10.176   2.2.2.2         1536        0x80000001 0x00645C
+
+Type-5 AS External Link States
+
+Link ID         ADV Router      Age         Seq#       Checksum Tag
+0.0.0.0         1.1.1.1         1429        0x80000001 0x00C00F 2263
+
+
+
+------------------------------------------------------------------------------
+  2.2 R2
+------------------------------------------------------------------------------
+R2
+
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+1.1.1.1           0   FULL/  -        00:00:38    172.18.10.201   Serial1/0
+R2#show ip ospf interface brief
+Interface    PID   Area            IP Address/Mask    Cost  State Nbrs F/C
+Se1/0        2258  0               172.18.10.202/30   64    P2P   1/1
+Et0/0.99     2258  2               172.18.10.177/28   10    DR    0/0
+Et0/1        2258  2               172.18.10.1/26     10    DR    0/0
+Et0/0.60     2258  2               172.18.9.129/25    10    DR    0/0
+Et0/0.50     2258  2               172.18.9.1/25      10    DR    0/0
+R2#show ip route ospf
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area 
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override
+
+Gateway of last resort is 172.18.10.201 to network 0.0.0.0
+
+O*E2  0.0.0.0/0 [110/1] via 172.18.10.201, 00:26:57, Serial1/0
+      172.18.0.0/16 is variably subnetted, 12 subnets, 5 masks
+O        172.18.10.192/30 [110/74] via 172.18.10.201, 00:26:57, Serial1/0
+O        172.18.10.196/30 [110/74] via 172.18.10.201, 00:26:57, Serial1/0
+R2#show ip protocols
+*** IP Routing is NSF aware ***
+
+Routing Protocol is "application"
+  Sending updates every 0 seconds
+  Invalid after 0 seconds, hold down 0, flushed after 0
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Maximum path: 32
+  Routing for Networks:
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+  Distance: (default is 4)
+
+Routing Protocol is "ospf 2258"
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Router ID 2.2.2.2
+  It is an area border router
+  Number of areas in this router is 2. 1 normal 1 stub 0 nssa
+  Maximum path: 4
+  Routing for Networks:
+    172.18.9.0 0.0.0.127 area 2
+    172.18.9.128 0.0.0.127 area 2
+    172.18.10.0 0.0.0.63 area 2
+    172.18.10.176 0.0.0.15 area 2
+    172.18.10.200 0.0.0.3 area 0
+  Passive Interface(s):
+    Ethernet0/0
+    Ethernet0/0.50
+    Ethernet0/0.60
+    Ethernet0/0.99
+    Ethernet0/1
+    Ethernet0/2
+    Ethernet0/3
+    Serial1/1
+    Serial1/2
+    Serial1/3
+    RG-AR-IF-INPUT1
+    VoIP-Null0
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+    1.1.1.1              110      00:26:56
+  Distance: (default is 110)
+
+R2#show ip ospf database
+
+            OSPF Router with ID (2.2.2.2) (Process ID 2258)
+
+Router Link States (Area 0)
+
+Link ID         ADV Router      Age         Seq#       Checksum Link count
+1.1.1.1         1.1.1.1         1615        0x80000003 0x0002C2 6
+2.2.2.2         2.2.2.2         1624        0x80000002 0x00AEBD 2
+3.3.3.3         3.3.3.3         1616        0x80000003 0x0012CE 2
+4.4.4.4         4.4.4.4         1621        0x80000003 0x00567A 2
+
+Summary Net Link States (Area 0)
+
+Link ID         ADV Router      Age         Seq#       Checksum
+172.18.9.0      2.2.2.2         1730        0x80000001 0x00B32F
+172.18.9.128    2.2.2.2         1730        0x80000001 0x00AEB3
+172.18.10.0     2.2.2.2         1730        0x80000001 0x002A77
+172.18.10.176   2.2.2.2         1730        0x80000001 0x00645C
+
+Router Link States (Area 2)
+
+Link ID         ADV Router      Age         Seq#       Checksum Link count
+2.2.2.2         2.2.2.2         1740        0x80000001 0x006F57 4
+
+Summary Net Link States (Area 2)
+
+Link ID         ADV Router      Age         Seq#       Checksum
+0.0.0.0         2.2.2.2         1740        0x80000001 0x0075C0
+172.18.10.192   2.2.2.2         1619        0x80000001 0x00ACB9
+172.18.10.196   2.2.2.2         1619        0x80000001 0x0084DD
+172.18.10.200   2.2.2.2         1730        0x80000001 0x00F770
+
+Type-5 AS External Link States
+
+Link ID         ADV Router      Age         Seq#       Checksum Tag
+0.0.0.0         1.1.1.1         1625        0x80000001 0x00C00F 2263
+R2#
+
+
+------------------------------------------------------------------------------
+  2.3 SWM1
+------------------------------------------------------------------------------
+SWM1
+
+SWM1#terminal length 0
+SWM1#show ip ospf neighbor
+
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+1.1.1.1           0   FULL/  -        00:00:35    172.18.10.193   Ethernet0/0
+SWM1#show ip ospf interface brief
+Interface    PID   Area            IP Address/Mask    Cost  State Nbrs F/C
+Et0/0        2713  0               172.18.10.194/30   10    P2P   1/1
+Vl99         2713  1               172.18.10.162/28   1     DOWN  0/0
+Vl40         2713  1               172.18.10.130/27   1     DOWN  0/0
+Vl30         2713  1               172.18.10.66/26    1     DOWN  0/0
+Vl20         2713  1               172.18.8.2/24      1     DOWN  0/0
+Vl10         2713  1               172.18.0.2/21      1     DOWN  0/0
+SWM1#show ip route ospf
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area 
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override, p - overrides from PfR
+
+Gateway of last resort is 172.18.10.193 to network 0.0.0.0
+
+O*E2  0.0.0.0/0 [110/1] via 172.18.10.193, 00:28:57, Ethernet0/0
+      172.18.0.0/16 is variably subnetted, 8 subnets, 5 masks
+O IA     172.18.9.0/25 [110/84] via 172.18.10.193, 00:28:57, Ethernet0/0
+O IA     172.18.9.128/25 [110/84] via 172.18.10.193, 00:28:57, Ethernet0/0
+O IA     172.18.10.0/26 [110/84] via 172.18.10.193, 00:28:57, Ethernet0/0
+O IA     172.18.10.176/28 [110/84] via 172.18.10.193, 00:28:57, Ethernet0/0
+O        172.18.10.196/30 [110/20] via 172.18.10.193, 00:28:57, Ethernet0/0
+O        172.18.10.200/30 [110/74] via 172.18.10.193, 00:28:57, Ethernet0/0
+SWM1#show ip protocols
+*** IP Routing is NSF aware ***
+
+Routing Protocol is "application"
+  Sending updates every 0 seconds
+  Invalid after 0 seconds, hold down 0, flushed after 0
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Maximum path: 32
+  Routing for Networks:
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+  Distance: (default is 4)
+
+Routing Protocol is "ospf 2713"
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Router ID 3.3.3.3
+  Number of areas in this router is 2. 2 normal 0 stub 0 nssa
+  Maximum path: 4
+  Routing for Networks:
+    172.18.0.0 0.0.7.255 area 1
+    172.18.8.0 0.0.0.255 area 1
+    172.18.10.64 0.0.0.63 area 1
+    172.18.10.128 0.0.0.31 area 1
+    172.18.10.160 0.0.0.15 area 1
+    172.18.10.192 0.0.0.3 area 0
+  Passive Interface(s):
+    Vlan10
+    Vlan20
+    Vlan30
+    Vlan40
+    Vlan99
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+    2.2.2.2              110      00:28:56
+    1.1.1.1              110      00:28:56
+  Distance: (default is 110)
+
+SWM1#show ip ospf database
+
+            OSPF Router with ID (3.3.3.3) (Process ID 2713)
+
+Router Link States (Area 0)
+
+Link ID         ADV Router      Age         Seq#       Checksum Link count
+1.1.1.1         1.1.1.1         1744        0x80000003 0x0002C2 6         
+2.2.2.2         2.2.2.2         1754        0x80000002 0x00AEBD 2         
+3.3.3.3         3.3.3.3         1743        0x80000003 0x0012CE 2         
+4.4.4.4         4.4.4.4         1751        0x80000003 0x00567A 2         
+
+Summary Net Link States (Area 0)
+
+Link ID         ADV Router      Age         Seq#       Checksum
+172.18.9.0      2.2.2.2         1860        0x80000001 0x00B32F
+172.18.9.128    2.2.2.2         1860        0x80000001 0x00AEB3
+172.18.10.0     2.2.2.2         1860        0x80000001 0x002A77
+172.18.10.176   2.2.2.2         1860        0x80000001 0x00645C
+
+Router Link States (Area 1)
+
+Link ID         ADV Router      Age         Seq#       Checksum Link count
+3.3.3.3         3.3.3.3         1753        0x80000001 0x00B872 0         
+
+Type-5 AS External Link States
+
+Link ID         ADV Router      Age         Seq#       Checksum Tag
+0.0.0.0         1.1.1.1         1754        0x80000001 0x00C00F 2263      
+SWM1#
+
+
+------------------------------------------------------------------------------
+  2.4 SWM2
+------------------------------------------------------------------------------
+SWM2
+
+SWM2#terminal length 0
+SWM2#show ip ospf neighbor
+
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+1.1.1.1           0   FULL/  -        00:00:34    172.18.10.197   Ethernet0/0
+SWM2#show ip ospf interface brief
+Interface    PID   Area            IP Address/Mask    Cost  State Nbrs F/C
+Et0/0        2268  0               172.18.10.198/30   10    P2P   1/1
+Vl99         2268  1               172.18.10.163/28   1     DOWN  0/0
+Vl40         2268  1               172.18.10.131/27   1     DOWN  0/0
+Vl30         2268  1               172.18.10.67/26    1     DOWN  0/0
+Vl20         2268  1               172.18.8.3/24      1     DOWN  0/0
+Vl10         2268  1               172.18.0.3/21      1     DOWN  0/0
+SWM2#show ip route ospf
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area 
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override, p - overrides from PfR
+
+Gateway of last resort is 172.18.10.197 to network 0.0.0.0
+
+O*E2  0.0.0.0/0 [110/1] via 172.18.10.197, 00:31:00, Ethernet0/0
+      172.18.0.0/16 is variably subnetted, 8 subnets, 5 masks
+O IA     172.18.9.0/25 [110/84] via 172.18.10.197, 00:31:00, Ethernet0/0
+O IA     172.18.9.128/25 [110/84] via 172.18.10.197, 00:31:00, Ethernet0/0
+O IA     172.18.10.0/26 [110/84] via 172.18.10.197, 00:31:00, Ethernet0/0
+O IA     172.18.10.176/28 [110/84] via 172.18.10.197, 00:31:00, Ethernet0/0
+O        172.18.10.192/30 [110/20] via 172.18.10.197, 00:31:00, Ethernet0/0
+O        172.18.10.200/30 [110/74] via 172.18.10.197, 00:31:00, Ethernet0/0
+SWM2#show ip protocols
+*** IP Routing is NSF aware ***
+
+Routing Protocol is "application"
+  Sending updates every 0 seconds
+  Invalid after 0 seconds, hold down 0, flushed after 0
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Maximum path: 32
+  Routing for Networks:
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+  Distance: (default is 4)
+
+Routing Protocol is "ospf 2268"
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Router ID 4.4.4.4
+  Number of areas in this router is 2. 2 normal 0 stub 0 nssa
+  Maximum path: 4
+  Routing for Networks:
+    172.18.0.0 0.0.7.255 area 1
+    172.18.8.0 0.0.0.255 area 1
+    172.18.10.64 0.0.0.63 area 1
+    172.18.10.128 0.0.0.31 area 1
+    172.18.10.160 0.0.0.15 area 1
+    172.18.10.196 0.0.0.3 area 0
+  Passive Interface(s):
+    Vlan10
+    Vlan20
+    Vlan30
+    Vlan40
+    Vlan99
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+    2.2.2.2              110      00:31:00
+    1.1.1.1              110      00:31:00
+  Distance: (default is 110)
+
+SWM2#show ip ospf database
+
+            OSPF Router with ID (4.4.4.4) (Process ID 2268)
+
+Router Link States (Area 0)
+
+Link ID         ADV Router      Age         Seq#       Checksum Link count
+1.1.1.1         1.1.1.1         1861        0x80000003 0x0002C2 6         
+2.2.2.2         2.2.2.2         1871        0x80000002 0x00AEBD 2         
+3.3.3.3         3.3.3.3         1862        0x80000003 0x0012CE 2         
+4.4.4.4         4.4.4.4         1866        0x80000003 0x00567A 2         
+
+Summary Net Link States (Area 0)
+
+Link ID         ADV Router      Age         Seq#       Checksum
+172.18.9.0      2.2.2.2         1978        0x80000001 0x00B32F
+172.18.9.128    2.2.2.2         1978        0x80000001 0x00AEB3
+172.18.10.0     2.2.2.2         1978        0x80000001 0x002A77
+172.18.10.176   2.2.2.2         1978        0x80000001 0x00645C
+
+Router Link States (Area 1)
+
+Link ID         ADV Router      Age         Seq#       Checksum Link count
+4.4.4.4         4.4.4.4         1926        0x80000001 0x006CB6 0         
+
+Type-5 AS External Link States
+
+Link ID         ADV Router      Age         Seq#       Checksum Tag
+0.0.0.0         1.1.1.1         1871        0x80000001 0x00C00F 2263      
+SWM2#
+
+
+==============================================================================
+  3. HSRP
+==============================================================================
+HSRP (para SWM1 y tamben  SWM2)
+
+
+------------------------------------------------------------------------------
+  3.1 SWM1
+------------------------------------------------------------------------------
+SWM1
+
+SWM1#show standby brief
+                     P indicates configured to preempt.
+                     |
+Interface   Grp  Pri P State   Active          Standby         Virtual IP
+Vl10        10   110 P Init    unknown         unknown         172.18.0.1
+Vl20        20   90  P Init    unknown         unknown         172.18.8.1
+Vl30        30   110 P Init    unknown         unknown         172.18.10.65
+Vl40        40   90  P Init    unknown         unknown         172.18.10.129
+Vl99        99   110 P Init    unknown         unknown         172.18.10.161
+SWM1#
+
+
+------------------------------------------------------------------------------
+  3.2 SWM2
+------------------------------------------------------------------------------
+SWM2
+
+SWM2#show standby brief
+                     P indicates configured to preempt.
+                     |
+Interface   Grp  Pri P State   Active          Standby         Virtual IP
+Vl10        10   90  P Init    unknown         unknown         172.18.0.1
+Vl20        20   110 P Init    unknown         unknown         172.18.8.1
+Vl30        30   90  P Init    unknown         unknown         172.18.10.65
+Vl40        40   110 P Init    unknown         unknown         172.18.10.129
+Vl99        99   90  P Init    unknown         unknown         172.18.10.161
+SWM2#
+
+
+==============================================================================
+  4. ACLs
+==============================================================================
+ACLs
+
+para demostrar cual funciona y cual no 
+
+
+------------------------------------------------------------------------------
+  4.1 R1-CORE
+------------------------------------------------------------------------------
+R1-CORE
+
+R1-Core#show access-lists
+Standard IP access list 1
+    10 permit 172.18.0.0, wildcard bits 0.1.255.255
+Standard IP access list 10
+    10 permit 172.18.10.64, wildcard bits 0.0.0.63
+Extended IP access list ACL-INTERNET
+    10 permit ospf any any (786 matches)
+    20 permit ip any 172.18.0.0 0.1.255.255
+    30 permit tcp 172.18.0.0 0.0.7.255 any eq www
+    40 permit tcp 172.18.0.0 0.0.7.255 any eq 443
+    50 permit udp 172.18.0.0 0.0.7.255 any eq domain
+    60 permit icmp 172.18.0.0 0.0.7.255 any
+    70 deny ip 172.18.0.0 0.0.7.255 any
+    80 deny ip 172.18.10.128 0.0.0.31 any
+    90 deny ip 172.18.10.160 0.0.0.15 any
+    100 deny ip 172.18.10.176 0.0.0.15 any
+    110 permit ip any any (16 matches)
+R1-Core#show ip interface <interfaz> | include access list
+                          ^
+% Invalid input detected at '^' marker.
+
+R1-Core#show run | section access-list
+ip access-list extended ACL-INTERNET
+ permit ospf any any
+ permit ip any 172.18.0.0 0.1.255.255
+ permit tcp 172.18.0.0 0.0.7.255 any eq www
+ permit tcp 172.18.0.0 0.0.7.255 any eq 443
+ permit udp 172.18.0.0 0.0.7.255 any eq domain
+ permit icmp 172.18.0.0 0.0.7.255 any
+ deny   ip 172.18.0.0 0.0.7.255 any
+ deny   ip 172.18.10.128 0.0.0.31 any
+ deny   ip 172.18.10.160 0.0.0.15 any
+ deny   ip 172.18.10.176 0.0.0.15 any
+ permit ip any any
+access-list 1 permit 172.18.0.0 0.1.255.255
+access-list 10 permit 172.18.10.64 0.0.0.63
+R1-Core#
+
+
+------------------------------------------------------------------------------
+  4.2 R2
+------------------------------------------------------------------------------
+R2
+
+R2#show access-lists
+Standard IP access list 10
+    10 permit 172.18.10.64, wildcard bits 0.0.0.63
+Standard IP access list 20
+    10 deny   172.18.0.0, wildcard bits 0.0.7.255
+    20 permit any
+Extended IP access list ACL-ACADEMICOS
+    10 deny ip 172.18.9.0 0.0.0.127 172.18.9.128 0.0.0.127
+    20 deny ip 172.18.9.0 0.0.0.127 172.18.10.64 0.0.0.63
+    30 permit ip any any
+Extended IP access list ACL-FINANZAS
+    10 deny ip 172.18.9.128 0.0.0.127 172.18.0.0 0.0.7.255
+    20 deny ip 172.18.9.128 0.0.0.127 172.18.8.0 0.0.0.255
+    30 permit ip any any
+R2#
+R2#show run | section access-list
+ip access-list extended ACL-ACADEMICOS
+ deny   ip 172.18.9.0 0.0.0.127 172.18.9.128 0.0.0.127
+ deny   ip 172.18.9.0 0.0.0.127 172.18.10.64 0.0.0.63
+ permit ip any any
+ip access-list extended ACL-FINANZAS
+ deny   ip 172.18.9.128 0.0.0.127 172.18.0.0 0.0.7.255
+ deny   ip 172.18.9.128 0.0.0.127 172.18.8.0 0.0.0.255
+ permit ip any any
+access-list 10 permit 172.18.10.64 0.0.0.63
+access-list 20 deny   172.18.0.0 0.0.7.255
+access-list 20 permit any
+R2#
+
+
+------------------------------------------------------------------------------
+  4.3 SWM1
+------------------------------------------------------------------------------
+SWM1
+
+SWM1#show access-lists
+Standard IP access list 10
+    10 permit 172.18.10.64, wildcard bits 0.0.0.63
+Extended IP access list ACL-DOCENTES
+    10 deny ip 172.18.8.0 0.0.0.255 172.18.9.128 0.0.0.127
+    20 deny ip 172.18.8.0 0.0.0.255 172.18.10.64 0.0.0.63
+    30 permit ip any any
+Extended IP access list ACL-ESTUDIANTES
+    10 permit icmp 172.18.0.0 0.0.7.255 any echo-reply
+    20 permit tcp 172.18.0.0 0.0.7.255 any established
+    30 permit icmp 172.18.0.0 0.0.7.255 172.18.10.0 0.0.0.63 echo
+    40 permit tcp 172.18.0.0 0.0.7.255 172.18.10.0 0.0.0.63 eq www
+    50 permit tcp 172.18.0.0 0.0.7.255 172.18.10.0 0.0.0.63 eq 443
+    60 permit udp 172.18.0.0 0.0.7.255 172.18.10.0 0.0.0.63 eq domain
+    70 deny ip 172.18.0.0 0.0.7.255 172.18.0.0 0.1.255.255
+    80 permit ip any any
+Extended IP access list ACL-VOZ
+    10 deny ip 172.18.10.128 0.0.0.31 172.18.10.64 0.0.0.63
+    20 deny ip 172.18.10.128 0.0.0.31 172.18.9.128 0.0.0.127
+    30 permit ip any any
+Extended IP access list CISCO-CWA-URL-REDIRECT-ACL
+    100 deny udp any any eq domain
+    101 deny tcp any any eq domain
+    102 deny udp any eq bootps any
+    103 deny udp any any eq bootpc
+    104 deny udp any eq bootpc any
+    105 permit tcp any any eq www
+Extended IP access list preauth_ipv4_acl (per-user)
+    10 permit udp any any eq domain
+    20 permit tcp any any eq domain
+    30 permit udp any eq bootps any
+    40 permit udp any any eq bootpc
+    50 permit udp any eq bootpc any
+    60 deny ip any any
+IPv6 access list preauth_ipv6_acl (per-user)
+    permit udp any any eq domain sequence 10
+    permit tcp any any eq domain sequence 20
+    permit icmp any any nd-ns sequence 30
+    permit icmp any any nd-na sequence 40
+    permit icmp any any router-solicitation sequence 50
+    permit icmp any any router-advertisement sequence 60
+    permit icmp any any redirect sequence 70
+    permit udp any eq 547 any eq 546 sequence 80
+    permit udp any eq 546 any eq 547 sequence 90
+    deny ipv6 any any sequence 100
+SWM1#
+SWM1#show run | section access-listshow access-lists
+SWM1#
+SWM1#show run | section access-list
+ip access-list extended ACL-DOCENTES
+ deny   ip 172.18.8.0 0.0.0.255 172.18.9.128 0.0.0.127
+ deny   ip 172.18.8.0 0.0.0.255 172.18.10.64 0.0.0.63
+ permit ip any any
+ip access-list extended ACL-ESTUDIANTES
+ permit icmp 172.18.0.0 0.0.7.255 any echo-reply
+ permit tcp 172.18.0.0 0.0.7.255 any established
+ permit icmp 172.18.0.0 0.0.7.255 172.18.10.0 0.0.0.63 echo
+ permit tcp 172.18.0.0 0.0.7.255 172.18.10.0 0.0.0.63 eq www
+ permit tcp 172.18.0.0 0.0.7.255 172.18.10.0 0.0.0.63 eq 443
+ permit udp 172.18.0.0 0.0.7.255 172.18.10.0 0.0.0.63 eq domain
+ deny   ip 172.18.0.0 0.0.7.255 172.18.0.0 0.1.255.255
+ permit ip any any
+ip access-list extended ACL-VOZ
+ deny   ip 172.18.10.128 0.0.0.31 172.18.10.64 0.0.0.63
+ deny   ip 172.18.10.128 0.0.0.31 172.18.9.128 0.0.0.127
+ permit ip any any
+access-list 10 permit 172.18.10.64 0.0.0.63
+SWM1#
+
+
+------------------------------------------------------------------------------
+  4.4 SWM2
+------------------------------------------------------------------------------
+SWM2
+
+SWM2#show access-lists
+Standard IP access list 10
+    10 permit 172.18.10.64, wildcard bits 0.0.0.63
+Extended IP access list ACL-DOCENTES
+    10 deny ip 172.18.8.0 0.0.0.255 172.18.9.128 0.0.0.127
+    20 deny ip 172.18.8.0 0.0.0.255 172.18.10.64 0.0.0.63
+    30 permit ip any any
+Extended IP access list ACL-ESTUDIANTES
+    10 permit icmp 172.18.0.0 0.0.7.255 any echo-reply
+    20 permit tcp 172.18.0.0 0.0.7.255 any established
+    30 permit icmp 172.18.0.0 0.0.7.255 172.18.10.0 0.0.0.63 echo
+    40 permit tcp 172.18.0.0 0.0.7.255 172.18.10.0 0.0.0.63 eq www
+    50 permit tcp 172.18.0.0 0.0.7.255 172.18.10.0 0.0.0.63 eq 443
+    60 permit udp 172.18.0.0 0.0.7.255 172.18.10.0 0.0.0.63 eq domain
+    70 deny ip 172.18.0.0 0.0.7.255 172.18.0.0 0.1.255.255
+    80 permit ip any any
+Extended IP access list ACL-VOZ
+    10 deny ip 172.18.10.128 0.0.0.31 172.18.10.64 0.0.0.63
+    20 deny ip 172.18.10.128 0.0.0.31 172.18.9.128 0.0.0.127
+    30 permit ip any any
+Extended IP access list CISCO-CWA-URL-REDIRECT-ACL
+    100 deny udp any any eq domain
+    101 deny tcp any any eq domain
+    102 deny udp any eq bootps any
+    103 deny udp any any eq bootpc
+    104 deny udp any eq bootpc any
+    105 permit tcp any any eq www
+Extended IP access list preauth_ipv4_acl (per-user)
+    10 permit udp any any eq domain
+    20 permit tcp any any eq domain
+    30 permit udp any eq bootps any
+    40 permit udp any any eq bootpc
+    50 permit udp any eq bootpc any
+    60 deny ip any any
+IPv6 access list preauth_ipv6_acl (per-user)
+    permit udp any any eq domain sequence 10
+    permit tcp any any eq domain sequence 20
+    permit icmp any any nd-ns sequence 30
+    permit icmp any any nd-na sequence 40
+    permit icmp any any router-solicitation sequence 50
+    permit icmp any any router-advertisement sequence 60
+    permit icmp any any redirect sequence 70
+    permit udp any eq 547 any eq 546 sequence 80
+    permit udp any eq 546 any eq 547 sequence 90
+    deny ipv6 any any sequence 100
+SWM2#
+SWM2#show run | section access-list
+ip access-list extended ACL-DOCENTES
+ deny   ip 172.18.8.0 0.0.0.255 172.18.9.128 0.0.0.127
+ deny   ip 172.18.8.0 0.0.0.255 172.18.10.64 0.0.0.63
+ permit ip any any
+ip access-list extended ACL-ESTUDIANTES
+ permit icmp 172.18.0.0 0.0.7.255 any echo-reply
+ permit tcp 172.18.0.0 0.0.7.255 any established
+ permit icmp 172.18.0.0 0.0.7.255 172.18.10.0 0.0.0.63 echo
+ permit tcp 172.18.0.0 0.0.7.255 172.18.10.0 0.0.0.63 eq www
+ permit tcp 172.18.0.0 0.0.7.255 172.18.10.0 0.0.0.63 eq 443
+ permit udp 172.18.0.0 0.0.7.255 172.18.10.0 0.0.0.63 eq domain
+ deny   ip 172.18.0.0 0.0.7.255 172.18.0.0 0.1.255.255
+ permit ip any any
+ip access-list extended ACL-VOZ
+ deny   ip 172.18.10.128 0.0.0.31 172.18.10.64 0.0.0.63
+ deny   ip 172.18.10.128 0.0.0.31 172.18.9.128 0.0.0.127
+ permit ip any any
+access-list 10 permit 172.18.10.64 0.0.0.63
+SWM2#
+
+
+
+==============================================================================
+  5. PINGS
+==============================================================================
+pings
+
+aqui vamos a provar ping entre una pc desde academicos o estudiante a todos para ver si funcionan las acls
+
+VPCS> ping 172.18.9.1  
+
+84 bytes from 172.18.9.1 icmp_seq=1 ttl=255 time=2.257 ms
+84 bytes from 172.18.9.1 icmp_seq=2 ttl=255 time=2.632 ms
+84 bytes from 172.18.9.1 icmp_seq=3 ttl=255 time=3.485 ms
+84 bytes from 172.18.9.1 icmp_seq=4 ttl=255 time=1.330 ms
+84 bytes from 172.18.9.1 icmp_seq=5 ttl=255 time=1.206 ms
+
+VPCS> ping 8.8.8.8
+
+84 bytes from 8.8.8.8 icmp_seq=1 ttl=253 time=11.560 ms
+84 bytes from 8.8.8.8 icmp_seq=2 ttl=253 time=11.038 ms
+84 bytes from 8.8.8.8 icmp_seq=3 ttl=253 time=12.923 ms
+84 bytes from 8.8.8.8 icmp_seq=4 ttl=253 time=14.853 ms
+84 bytes from 8.8.8.8 icmp_seq=5 ttl=253 time=11.484 ms
+
+VPCS> ping 172.18.10.80
+
+*172.18.9.1 icmp_seq=1 ttl=255 time=1.659 ms (ICMP type:3, code:13, Communication administrati
+vely prohibited)
+*172.18.9.1 icmp_seq=2 ttl=255 time=3.681 ms (ICMP type:3, code:13, Communication administrati
+vely prohibited)
+*172.18.9.1 icmp_seq=3 ttl=255 time=1.670 ms (ICMP type:3, code:13, Communication administrati
+vely prohibited)
+*172.18.9.1 icmp_seq=4 ttl=255 time=1.362 ms (ICMP type:3, code:13, Communication administrati
+vely prohibited)
+*172.18.9.1 icmp_seq=5 ttl=255 time=1.743 ms (ICMP type:3, code:13, Communication administrati
+vely prohibited)
+
+VPCS> ping 172.18.0.10
+
+*200.100.10.2 icmp_seq=1 ttl=254 time=25.234 ms (ICMP type:11, code:0, TTL expired in transit)
+*200.100.10.2 icmp_seq=2 ttl=254 time=52.921 ms (ICMP type:11, code:0, TTL expired in transit)
+*200.100.10.2 icmp_seq=3 ttl=254 time=21.703 ms (ICMP type:11, code:0, TTL expired in transit)
+*200.100.10.2 icmp_seq=4 ttl=254 time=20.584 ms (ICMP type:11, code:0, TTL expired in transit)
+*200.100.10.2 icmp_seq=5 ttl=254 time=82.092 ms (ICMP type:11, code:0, TTL expired in transit)
+
+VPCS> ping 172.18.8.10
+
+*200.100.10.2 icmp_seq=1 ttl=254 time=30.006 ms (ICMP type:11, code:0, TTL expired in transit)
+*200.100.10.2 icmp_seq=2 ttl=254 time=19.563 ms (ICMP type:11, code:0, TTL expired in transit)
+*200.100.10.2 icmp_seq=3 ttl=254 time=28.164 ms (ICMP type:11, code:0, TTL expired in transit)
+*200.100.10.2 icmp_seq=4 ttl=254 time=19.407 ms (ICMP type:11, code:0, TTL expired in transit)
+*200.100.10.2 icmp_seq=5 ttl=254 time=20.756 ms (ICMP type:11, code:0, TTL expired in transit)
+
+VPCS> ping 172.18.9.138
+
+*172.18.9.1 icmp_seq=1 ttl=255 time=1.812 ms (ICMP type:3, code:13, Communication administrati
+vely prohibited)
+*172.18.9.1 icmp_seq=2 ttl=255 time=1.802 ms (ICMP type:3, code:13, Communication administrati
+vely prohibited)
+*172.18.9.1 icmp_seq=3 ttl=255 time=1.795 ms (ICMP type:3, code:13, Communication administrati
+vely prohibited)
+*172.18.9.1 icmp_seq=4 ttl=255 time=2.648 ms (ICMP type:3, code:13, Communication administrati
+vely prohibited)
+*172.18.9.1 icmp_seq=5 ttl=255 time=1.367 ms (ICMP type:3, code:13, Communication administrati
+vely prohibited)
+
+VPCS> ping 172.18.10.10
+
+84 bytes from 172.18.10.10 icmp_seq=1 ttl=63 time=3.451 ms
+84 bytes from 172.18.10.10 icmp_seq=2 ttl=63 time=1.731 ms
+84 bytes from 172.18.10.10 icmp_seq=3 ttl=63 time=2.310 ms
+84 bytes from 172.18.10.10 icmp_seq=4 ttl=63 time=3.776 ms
+84 bytes from 172.18.10.10 icmp_seq=5 ttl=63 time=11.229 ms
+
+VPCS> 
+
+
