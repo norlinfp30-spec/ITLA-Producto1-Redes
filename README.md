@@ -34,3 +34,4 @@ El proyecto cumple con los siguientes criterios técnicos:
 - ISP.txt: Comandos de simulación del proveedor de Internet.
 - Hosts.txt: Comandos de configuracion de cada Dispositivo hosts.
 - Producto 1 Equipo 2: Archivo de topologia de pnetlab Configurado
+- Informe_Ejecutivo_Producto1_Equipo2..pdf: El informe Ejecutivo
